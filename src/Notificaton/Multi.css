@@ -1,0 +1,47 @@
+.p-multiselect-label {
+    display: flex;
+    white-space: nowrap;
+    cursor: pointer;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+.multiselect-demo .p-multiselect {
+    min-width: 15rem;
+}
+
+.multiselect-demo .multiselect-custom .p-multiselect-label:not(.p-placeholder):not(.p-multiselect-items-label) {
+    padding-top: .25rem;
+    padding-bottom: .25rem;
+}
+
+.multiselect-demo .multiselect-custom .country-item-value {
+    padding: .25rem .5rem;
+    border-radius: 3px;
+    display: inline-flex;
+    margin-right: .5rem;
+    background-color: var(--primary-color);
+    color: var(--primary-color-text);
+}
+
+.multiselect-demo .multiselect-custom .country-item-value img.flag {
+    width: 17px;
+}
+
+.p-multiselect .p-multiselect-trigger {
+    background: transparent;
+    color: #495057;
+    display: none !important;
+    width: 2.357rem;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+        
+.p-multiselect {
+    background: #ffffff;
+    max-width: 19em;
+}
+.p-multiselect {
+    background: #ffffff;
+   min-width: 18.3em;
+   max-width: 18.3em;
+}

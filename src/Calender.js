@@ -1,55 +1,134 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { FullCalendar } from 'primereact/fullcalendar';
-
-// import { EventService } from '../service/EventService';
+import  {Context} from "./App";
+import { Dialog } from 'primereact/dialog'; 
 import dayGridPlugin from '@fullcalendar/daygrid';
+// import socketIOClient from "socket.io-client"; 
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-// import '@fullcalendar/core/main.css';
-// import '@fullcalendar/daygrid/main.css';
-// import '@fullcalendar/timegrid/main.css';
+import Adddate from './BulletinBoard/AddDate'
+import Notification from './Notificaton/notificationPanel'
+import { ProgressSpinner } from 'primereact/progressspinner';
+import {withRouter} from 'react-router-dom'
+import ChatOrg from './ChatOrg/Schedule'
+
+ let ids = ''
+ 
+export default withRouter(props => {
+  const {load,push,open,send,sOpen,sSend} = props
+  const [date,sDate] = React.useState({title:'',attendance:'',start:'',description:'',task:''}) 
+  const {data,sData} = useContext(Context) 
+  const [schedule,sSchedule] = useState(false)  
+  const [erralert,sErralert] = React.useState(false)
+  
+  const messgs = {
+    title:`Please set the time of the ${date.task||'meeting or task'}. \n this time will show on the calender and if you share this ${date.task||'meeting or task'} those people will see it on there calender as well, so that they will know the time of the ${date.task||'meeting or task'}`,
+   description:`Please write reason for the ${date.task||'meeting or the task'} so that it can be easily remember. And also if you select people to see this ${date.task||'meeting or task'} they will know the reason for it.`,
+   task:"Please select what you want to set either a Meeting or a Task. Please note if you select task and don't don't select people to see it. it is private to you, you are the only one that will see it. But if you select Meeting and don't select any one to see it everyone in the department will that see that meeting."}
 
 
+   
+    const options = { 
+      
+        initialView:"dayGridMonth",
+        plugins: [ timeGridPlugin, interactionPlugin,dayGridPlugin],
+        headerToolbar: {
+            left: 'dayGridMonth,timeGridWeek,timeGridDay',
+            center: 'title',
+            right: 'prev,next'
+          } , 
+          // expandRows: true,
+          eventColor: '#522A09', 
+          dateClick:(info)=> {
+            sOpen(true)
+            // console.log(info.time)
+            // // alert('Clicked on: ' + new Date(info.date).toDateString());
+            // // alert('Clicked on: ' + 
+            // // sDate({date:}) info.dateStr;
+            sDate({...date,start:info.dateStr}) 
+          //  console.log(info)
+            // alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+            // alert('Current view: ' + info.view.type);
+            // change the day's background color just for fun
+            // info.dayEl.style.backgroundColor = '#DD9547';
+          },
+          eventClick: function(info) {          
+            sData({role:'schedule',d:info.event.extendedProps})
+            sSchedule(true)          
+          } ,
+          displayEventTime :false, 
+          customButtons: {
+            custom1: {
+              text: 'custom 1',
+              click: function() {
+                alert('clicked custom button 1!');
+              }
+            },
+            custom2: {
+              text: 'custom 2',
+              click: function() {
+                alert('clicked custom button 2!');
+              }
+            }
+          }
+    };
  
 
-export default () => {
-    const [events, setEvents] = useState([
-        {"id": 1,"title": "All Day Event","start": "2017-02-01"},
-        {"id": 2,"title": "Long Event","start": "2017-02-07","end": "2017-02-10"},
-        {"id": 3,"title": "Repeating Event","start": "2017-02-09T16:00:00"},
-        {"id": 4,"title": "Repeating Event","start": "2017-02-16T16:00:00"},
-        {"id": 5,"title": "Conference","start": "2017-02-11","end": "2017-02-13"},
-        {"id": 6,"title": "Meeting","start": "2017-02-12T10:30:00","end": "2017-02-12T12:30:00"},
-        {"id": 7,"title": "Lunch","start": "2017-02-12T12:00:00"},
-        {"id": 8,"title": "Meeting","start": "2017-02-12T14:30:00"},
-        {"id": 9,"title": "Happy Hour","start": "2017-02-12T17:30:00"},
-        {"id": 10,"title": "Dinner","start": "2017-02-12T20:00:00"},
-        {"id": 11,"title": "Birthday Party","start": "2017-02-13T07:00:00"},
-        {"id": 12,"title": "Click for Google","url": "https://www.google.com/","start": "2017-02-28"}
-    ]);
-    const options = {
-        plugins: [ timeGridPlugin, interactionPlugin,dayGridPlugin],
-        defaultView: 'dayGridMonth',
-        defaultDate: '2017-02-01',
-        header: {
-            left: 'prev,next',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        editable: true
-    };
 
-    // const eventService = new EventService();
+   const sender =(val)=>{ 
 
-    useEffect(() => {
-        // eventService.getEvents().then(data => setEvents(data));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      if(val==='send'){
 
+         
+        let go = true
+        for (const key in date) {
+          if(key!=='attendance' && !date[key]){
+            sErralert(messgs[key])
+            go=false
+          }
+        }
+        if(go){
+          sSend(true) 
+          sErralert(false)
+         push({to:'message',msg:{save:{...date,setter:data.me.i,attendance:date.attendance.length?date.attendance:date.task==='Task'?[]:data.atten},room:data.me.department}})
+          sDate({title:'',attendance:[],start:'',description:'',task:''})
+        }
+      }else{
+       sDate({...date,...val}) 
+      }
+       
+     }
+     
+   const progress =(v)=>{
+     push(v)
+   }  
+
+    useEffect(() => {     
+    
+      if(!data.me){
+        props.history.push('/')
+      }  
+    }); 
+    
+    
     return (
-        <div>
-            <div className="card">
-                <FullCalendar events={events} options={options} />
-            </div>
-        </div>
+      <>
+      <Adddate erralert={erralert} sErralert={sErralert} open={open} sopen={sOpen} date={date} sender={sender} send={send}/>    
+     
+      <Dialog resizable={false} closable={false}  header="Loading data..." visible={load} style={{ width: '50vw' }}> 
+          <ProgressSpinner style={{width: '50px', height: '50px'}} strokeWidth="8" fill="#EEEEEE" animationDuration=".5s"/>  
+      </Dialog>  
+
+      <div style={{display:'flex',flexDirection:'row',width:'100%',flexWrap:"nowrap"}}>
+         <FullCalendar style={{width:'100%',overFlow:'hidden'}}  events={data.event} options={options} />
+     
+       <div className='notification' >
+         <div className='chats'>Messages</div>
+         <Notification send={push}/>
+      </div>     
+       </div>
+      {data.schedule && <ChatOrg  sch={schedule} sSch={sSchedule} />}
+                </>
+          
     );
-}
+})
